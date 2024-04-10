@@ -16,8 +16,8 @@
   },
   "servers": [
     {
-      "url": "https://demo.traccar.org/api",
-      "description": "Demo Server 1"
+      "url": "https://www.popa-track.com",
+      "description": "Popa boat tracing server"
     },
     {
       "url": "https://demo2.traccar.org/api",

@@ -1,5 +1,5 @@
-[submodule "traccar-web"]
-	path = traccar-web
-	url = ../traccar-web.git
+[submodule "traccar-web-popa"]
+	path = traccar-web-popa
+	url = ../traccar-web-popa.git
 	branch = master
 	ignore = all

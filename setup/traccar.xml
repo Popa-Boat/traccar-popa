@@ -18,9 +18,38 @@
 
     -->
 
-    <entry key='database.driver'>org.h2.Driver</entry>
-    <entry key='database.url'>jdbc:h2:./data/database</entry>
-    <entry key='database.user'>sa</entry>
-    <entry key='database.password'></entry>
+    <!-- Database config -->
+
+    <entry key="config.default">./conf/default.xml</entry>
+    <entry key='database.driver'>com.mysql.jdbc.Driver</entry>
+    <entry key='database.url'>jdbc:mysql://localhost/traccar?zeroDateTimeBehavior=round&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true&amp;useSSL=false&amp;allowMultiQueries=true&amp;autoReconnect=true&amp;useUnicode=yes&amp;characterEncoding=UTF-8&amp;sessionVariables=sql_mode=''</entry>
+    <entry key='database.user'>root</entry>
+    <entry key='database.password'>root</entry>
+
+    <!-- Email setup -->
+
+    <entry key='mail.smtp.port'>587</entry>
+    <entry key='mail.smtp.starttls.enable'>true</entry>
+    <entry key='mail.smtp.host'>smtp.gmail.com</entry>
+    <entry key='mail.smtp.from'>rimas1999@gmail.com</entry>
+    <entry key='mail.smtp.auth'>true</entry>
+    <entry key='mail.smtp.username'>rimas1999@gmail.com</entry>
+    <entry key='mail.smtp.password'>kuspqbyoejssaxpu</entry>
+
+    <!-- Filter setuo -->
+    <entry key='filter.enable'>false</entry>
+    <entry key='filter.zero'>true</entry>
+    <entry key='filter.accuracy'>10</entry>
+    <entry key='filter.static'>false</entry>
+    <entry key='coordinates.filter'>true</entry>
+    <entry key='coordinates.minError'>1</entry>
+    <entry key='coordinates.maxError'>500</entry>
+
+    <!-- Trips config -->
+    <entry key='report.trip.minimalTripDistance'>500</entry>
+    <entry key='report.trip.minimalTripDuration'>300</entry>
+    <entry key='report.trip.minimalParkingDuration'>60</entry>
+    <entry key='report.trip.minimalNoDataDuration'>3600</entry>
+    <entry key='report.ignoreOdometer'>true</entry>
 
 </properties>

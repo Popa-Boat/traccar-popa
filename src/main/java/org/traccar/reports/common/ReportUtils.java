@@ -273,11 +273,11 @@ public class ReportUtils {
     private boolean isMoving(List<Position> positions, int index, TripsConfig tripsConfig) {
         if (tripsConfig.getMinimalNoDataDuration() > 0) {
             boolean beforeGap = index < positions.size() - 1
-                    && positions.get(index + 1).getFixTime().getTime() - positions.get(index).getFixTime().getTime()
-                    >= tripsConfig.getMinimalNoDataDuration();
+                    && positions.get(index + 1).getFixTime().getTime()
+                            - positions.get(index).getFixTime().getTime() >= tripsConfig.getMinimalNoDataDuration();
             boolean afterGap = index > 0
-                    && positions.get(index).getFixTime().getTime() - positions.get(index - 1).getFixTime().getTime()
-                    >= tripsConfig.getMinimalNoDataDuration();
+                    && positions.get(index).getFixTime().getTime()
+                            - positions.get(index - 1).getFixTime().getTime() >= tripsConfig.getMinimalNoDataDuration();
             if (beforeGap || afterGap) {
                 return false;
             }
@@ -307,7 +307,6 @@ public class ReportUtils {
         var positions = PositionUtil.getPositions(storage, device.getId(), from, to);
         if (!positions.isEmpty()) {
             boolean trips = reportClass.equals(TripReportItem.class);
-
             MotionState motionState = new MotionState();
             boolean initialValue = isMoving(positions, 0, tripsConfig);
             motionState.setMotionStreak(initialValue);
@@ -315,27 +314,40 @@ public class ReportUtils {
 
             boolean detected = trips == motionState.getMotionState();
             double maxSpeed = 0;
-            int startEventIndex = detected ? 0 : -1;
+            int startEventIndex = detected && trips && positions.get(0).getGeofenceIds() == null ? 0 : -1;
             int startNoEventIndex = -1;
+            boolean mymotion = detected && trips && positions.get(0).getGeofenceIds() == null;
             for (int i = 0; i < positions.size(); i++) {
                 boolean motion = isMoving(positions, i, tripsConfig);
                 if (motionState.getMotionState() != motion) {
-                    if (motion == trips) {
-                        if (!detected) {
-                            startEventIndex = i;
-                            maxSpeed = positions.get(i).getSpeed();
+                    if (motion == true) {
+                        if (positions.get(i).getGeofenceIds() == null) {
+                            mymotion = true;
+                            if (!detected) {
+                                startEventIndex = i;
+                                maxSpeed = positions.get(i).getSpeed();
+                            }
+                            startNoEventIndex = -1;
+                        } else {
+                            mymotion = false;
                         }
-                        startNoEventIndex = -1;
                     } else {
-                        startNoEventIndex = i;
+                        if (positions.get(i).getGeofenceIds() != null) {
+                            mymotion = false;
+                            startNoEventIndex = i;
+                        } else {
+                            mymotion = true;
+                        }
                     }
                 } else {
                     maxSpeed = Math.max(maxSpeed, positions.get(i).getSpeed());
                 }
 
-                MotionProcessor.updateState(motionState, positions.get(i), motion, tripsConfig);
+                MotionProcessor.updateState(motionState, positions.get(i), mymotion, tripsConfig);
+                // MotionProcessor.updateState(motionState, positions.get(i), motion,
+                // tripsConfig);
                 if (motionState.getEvent() != null) {
-                    if (motion == trips) {
+                    if (mymotion == trips) {
                         detected = true;
                         startNoEventIndex = -1;
                     } else if (startEventIndex >= 0 && startNoEventIndex >= 0) {

@@ -1,5 +1,5 @@
 [submodule "traccar-web-popa"]
 	path = traccar-web-popa
-	url = ../traccar-web-popa.git
+	url = https://github.com/Popa-Boat/traccar-web-popa.git
 	branch = master
 	ignore = all

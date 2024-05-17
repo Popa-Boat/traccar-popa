@@ -271,6 +271,7 @@ public class ReportUtils {
     }
 
     private boolean isMoving(List<Position> positions, int index, TripsConfig tripsConfig) {
+        final double GPS_DRIFT_SPEED = 0.05; // km/h
         if (tripsConfig.getMinimalNoDataDuration() > 0) {
             boolean beforeGap = index < positions.size() - 1
                     && positions.get(index + 1).getFixTime().getTime()
@@ -281,6 +282,9 @@ public class ReportUtils {
             if (beforeGap || afterGap) {
                 return false;
             }
+        }
+        if (positions.get(index).getSpeed() < GPS_DRIFT_SPEED && positions.get(index).getGeofenceIds() != null) {
+            return false;
         }
         return positions.get(index).getBoolean(Position.KEY_MOTION);
     }

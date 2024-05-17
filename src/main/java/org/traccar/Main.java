@@ -17,7 +17,6 @@ package org.traccar;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.ProvisionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.traccar.broadcast.BroadcastService;
@@ -143,14 +142,8 @@ public final class Main {
                 }
             }));
         } catch (Exception e) {
-            Throwable unwrapped;
-            if (e instanceof ProvisionException) {
-                unwrapped = e.getCause();
-            } else {
-                unwrapped = e;
-            }
-            LOGGER.error("Main method error", unwrapped);
-            System.exit(1);
+            LOGGER.error("Main method error", e);
+            throw new RuntimeException(e);
         }
     }
 

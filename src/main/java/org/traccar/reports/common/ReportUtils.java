@@ -64,6 +64,23 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.time.temporal.ChronoUnit;
 
 public class ReportUtils {
 
@@ -293,11 +310,58 @@ public class ReportUtils {
             Device device, Date from, Date to, Class<T> reportClass) throws StorageException {
 
         long threshold = config.getLong(Keys.REPORT_FAST_THRESHOLD);
-        if (Duration.between(from.toInstant(), to.toInstant()).toSeconds() > threshold) {
-            return fastTripsAndStops(device, from, to, reportClass);
-        } else {
-            return slowTripsAndStops(device, from, to, reportClass);
+
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime startDateTime = ZonedDateTime.ofInstant(from.toInstant(), zoneId);
+        ZonedDateTime endDateTime = ZonedDateTime.ofInstant(to.toInstant(), zoneId);
+
+        // Calculate the number of days
+        long daysBetween = ChronoUnit.DAYS.between(startDateTime, endDateTime);
+
+        // Create a thread pool
+        int numberOfThreads = Math.min(Runtime.getRuntime().availableProcessors(), (int) daysBetween + 1);
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+
+        List<CompletableFuture<List<T>>> futures = new ArrayList<>();
+
+        for (long i = 0; i <= daysBetween; i++) {
+            ZonedDateTime dayStart = startDateTime.plusDays(i);
+            ZonedDateTime dayEnd = dayStart.plusDays(1).isBefore(endDateTime) ? dayStart.plusDays(1) : endDateTime;
+
+            CompletableFuture<List<T>> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    if (ChronoUnit.SECONDS.between(dayStart, dayEnd) > threshold) {
+                        return fastTripsAndStops(device,
+                                Date.from(dayStart.toInstant()),
+                                Date.from(dayEnd.toInstant()),
+                                reportClass);
+                    } else {
+                        return slowTripsAndStops(device,
+                                Date.from(dayStart.toInstant()),
+                                Date.from(dayEnd.toInstant()),
+                                reportClass);
+                    }
+                } catch (StorageException e) {
+                    throw new CompletionException(e);
+                }
+            }, executorService);
+
+            futures.add(future);
         }
+
+        List<T> result = futures.stream()
+                .flatMap(future -> {
+                    try {
+                        return future.get().stream();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        executorService.shutdown();
+
+        return result;
     }
 
     public <T extends BaseReportItem> List<T> slowTripsAndStops(
